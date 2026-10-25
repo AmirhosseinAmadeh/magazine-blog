@@ -1,0 +1,48 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  accent?: string;
+}
+
+const { title, description = 'مجله‌ی آنلاین رایگان، شماره‌به‌شماره و با موضوع مشخص', accent } = Astro.props;
+const fullTitle = title ? `${title} | مجله` : 'مجله';
+---
+
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{fullTitle}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body style={accent ? `--accent: ${accent}` : undefined}>
+    <header class="site-header">
+      <div class="wrap bar">
+        <a class="brand" href="/">مجله</a>
+        <nav>
+          <a href="/archive">آرشیو شماره‌ها</a>
+          <a href="/write">برای نویسندگان</a>
+          <a href="/about">درباره</a>
+        </nav>
+      </div>
+    </header>
+    <main class="wrap">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="wrap">
+        <p>همه‌ی شماره‌ها رایگان و قابل دانلود است. مقاله‌ها متعلق به نویسندگان‌شان است.</p>
+      </div>
+    </footer>
+  </body>
+</html>

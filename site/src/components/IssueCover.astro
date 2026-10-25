@@ -1,0 +1,19 @@
+---
+import { faNumber } from '../lib/utils';
+
+interface Props {
+  number: number;
+  title: string;
+  color: string;
+}
+
+const { number, title, color } = Astro.props;
+---
+
+<div class="cover" style={`--accent: ${color}`}>
+  <div class="cover-inner">
+    <span class="kicker">شماره‌ی</span>
+    <span class="num">{faNumber(number)}</span>
+    <span class="ttl">{title}</span>
+  </div>
+</div>

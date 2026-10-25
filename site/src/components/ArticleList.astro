@@ -1,0 +1,29 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { readingTime } from '../lib/utils';
+
+interface Props {
+  articles: CollectionEntry<'articles'>[];
+}
+
+const { articles } = Astro.props;
+---
+
+<ul class="article-list">
+  {
+    articles.map((a) => (
+      <li>
+        <div>
+          <h3 lang={a.data.lang} dir={a.data.lang === 'en' ? 'ltr' : 'rtl'}>
+            <a href={`/articles/${a.id}`}>{a.data.title}</a>
+            <span class="tag">{a.data.lang.toUpperCase()}</span>
+          </h3>
+          <div class="byline">
+            <bdi>{a.data.author}</bdi> · <bdi>{readingTime(a.body)} دقیقه مطالعه</bdi>
+          </div>
+          <p lang={a.data.lang} dir={a.data.lang === 'en' ? 'ltr' : 'rtl'}>{a.data.summary}</p>
+        </div>
+      </li>
+    ))
+  }
+</ul>

@@ -1,0 +1,26 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import IssueCover from '../components/IssueCover.astro';
+import { faDate } from '../lib/utils';
+
+const issues = (await getCollection('issues')).sort((a, b) => b.data.number - a.data.number);
+---
+
+<Base title="آرشیو شماره‌ها">
+  <h1>آرشیو شماره‌ها</h1>
+  <p class="muted">همه‌ی شماره‌ها رایگان است و PDF هر شماره را می‌توان دانلود کرد.</p>
+  <div class="issue-grid" style="margin-top: 24px">
+    {
+      issues.map((i) => (
+        <a href={`/issues/${i.id}`}>
+          <IssueCover number={i.data.number} title={i.data.theme} color={i.data.color} />
+          <div class="meta">
+            <strong>{i.data.title}</strong>
+            <div class="muted">{faDate(i.data.date)}</div>
+          </div>
+        </a>
+      ))
+    }
+  </div>
+</Base>

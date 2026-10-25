@@ -1,0 +1,51 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import IssueCover from '../components/IssueCover.astro';
+import ArticleList from '../components/ArticleList.astro';
+import { faDate } from '../lib/utils';
+
+const issues = (await getCollection('issues')).sort((a, b) => b.data.number - a.data.number);
+const current = issues[0];
+const articles = (await getCollection('articles'))
+  .filter((a) => a.data.issue === current.id)
+  .sort((a, b) => a.data.order - b.data.order);
+const older = issues.slice(1);
+---
+
+<Base accent={current.data.color}>
+  <section class="hero">
+    <IssueCover number={current.data.number} title={current.data.theme} color={current.data.color} />
+    <div>
+      <div class="eyebrow">شماره‌ی جاری · {faDate(current.data.date)}</div>
+      <h1>{current.data.title}</h1>
+      <p class="muted">موضوع این شماره: {current.data.theme}</p>
+      <div class="actions">
+        <a class="btn" href={`/issues/${current.id}`}>خواندن شماره</a>
+        <a class="btn ghost" href={`/issues/${current.id}`}>دانلود PDF</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-head"><h2>مقاله‌های این شماره</h2></div>
+  <ArticleList articles={articles} />
+
+  {
+    older.length > 0 && (
+      <>
+        <div class="section-head">
+          <h2>شماره‌های قبلی</h2>
+          <a href="/archive">همه‌ی شماره‌ها</a>
+        </div>
+        <div class="issue-grid">
+          {older.map((i) => (
+            <a href={`/issues/${i.id}`}>
+              <IssueCover number={i.data.number} title={i.data.theme} color={i.data.color} />
+              <div class="meta">{i.data.title}</div>
+            </a>
+          ))}
+        </div>
+      </>
+    )
+  }
+</Base>

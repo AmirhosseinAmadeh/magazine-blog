@@ -1,0 +1,44 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import IssueCover from '../../components/IssueCover.astro';
+import ArticleList from '../../components/ArticleList.astro';
+import { faDate } from '../../lib/utils';
+
+export async function getStaticPaths() {
+  const issues = await getCollection('issues');
+  const articles = await getCollection('articles');
+  return issues.map((issue) => ({
+    params: { id: issue.id },
+    props: {
+      issue,
+      articles: articles.filter((a) => a.data.issue === issue.id).sort((a, b) => a.data.order - b.data.order),
+    },
+  }));
+}
+
+const { issue, articles } = Astro.props;
+const { Content } = await render(issue);
+// PDF files are dropped in public/pdf/<id>.pdf by the (future) layout script.
+const pdfUrl = `/pdf/${issue.id}.pdf`;
+---
+
+<Base title={issue.data.title} accent={issue.data.color}>
+  <section class="hero">
+    <IssueCover number={issue.data.number} title={issue.data.theme} color={issue.data.color} />
+    <div>
+      <div class="eyebrow">{faDate(issue.data.date)}</div>
+      <h1>{issue.data.title}</h1>
+      <p class="muted">موضوع این شماره: {issue.data.theme}</p>
+      <div class="actions">
+        <a class="btn" href={pdfUrl} download>دانلود PDF</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-head"><h2>سرمقاله</h2></div>
+  <div class="prose" style="margin: 0"><Content /></div>
+
+  <div class="section-head"><h2>فهرست مقاله‌ها</h2></div>
+  <ArticleList articles={articles} />
+</Base>

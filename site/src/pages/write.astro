@@ -1,0 +1,32 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+
+const issues = (await getCollection('issues')).sort((a, b) => b.data.number - a.data.number);
+const current = issues[0];
+---
+
+<Base title="برای نویسندگان">
+  <div class="page-narrow">
+    <h1>برای نویسندگان</h1>
+    <p>
+      هر شماره یک موضوع مشخص دارد. اگر درباره‌ی آن موضوع چیزی برای گفتن دارید، مقاله‌تان را برای ما بفرستید.
+      مقاله می‌تواند فارسی یا انگلیسی باشد، ولی هر مقاله فقط به یک زبان نوشته می‌شود.
+    </p>
+
+    <h2>موضوع شماره‌ی بعد</h2>
+    <p class="muted">به‌زودی اعلام می‌شود. (شماره‌ی جاری: {current.data.theme})</p>
+
+    <h2>مراحل</h2>
+    <ol class="steps">
+      <li>مقاله‌تان را بنویسید (۸۰۰ تا ۲۵۰۰ کلمه).</li>
+      <li>برای ما بفرستید.</li>
+      <li>ویرایش و بازخورد.</li>
+      <li>تأیید رضایت‌نامه‌ی ساده‌ی انتشار و لایسنس.</li>
+      <li>انتشار در سایت و در PDF شماره.</li>
+    </ol>
+
+    <h2>ارسال مقاله</h2>
+    <p class="muted">راه ارسال (فرم یا ایمیل) هنوز مشخص نشده است.</p>
+  </div>
+</Base>
