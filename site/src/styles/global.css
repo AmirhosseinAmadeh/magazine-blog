@@ -144,6 +144,12 @@ h2 { font-size: 1.5rem; }
 .cvr-reveal i { background: var(--ink); animation: vanish 80ms linear both; }
 @keyframes vanish { from { opacity: 1; } to { opacity: 0; } }
 
+/* scroll reveal: veil of squares that dissolves (home page script) */
+.px-host { position: relative; }
+.px-veil { position: absolute; inset: -2px; display: grid; z-index: 3; pointer-events: none; }
+.px-veil i { background: var(--bg); animation: vanish 80ms linear both paused; animation-delay: calc(var(--d, 0ms) + var(--cd, 0ms)); }
+.px-veil.go i { animation-play-state: running; }
+
 /* hero */
 .hero { position: relative; padding-block: 56px; margin-top: -40px; }
 .hero-bands { position: absolute; inset: 0; background: linear-gradient(to right, var(--a) 50%, var(--b) 50%); }

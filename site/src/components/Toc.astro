@@ -13,7 +13,7 @@ const { issue } = Astro.props;
 <ul class="toc">
   {
     issue.data.toc.map((e) => (
-      <li>
+      <li data-px>
         <a class="toc-cell px" href={readUrl(issue, e.from)}>
           <PixelIcon name={e.kind} />
           <span class="toc-title">{e.title}</span>
