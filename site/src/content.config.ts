@@ -1,30 +1,32 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 
-// Each issue is src/content/issues/<id>.md; its body is the editorial.
+// One file per printed issue: src/content/issues/<NNN>.md (frontmatter only).
+// The PDF and page images live in public/magazine/<NNN>/ and are not committed.
 const issues = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/issues' }),
   schema: z.object({
     number: z.number(),
-    title: z.string(),
-    theme: z.string(),
-    date: z.coerce.date(),
-    color: z.string().default('#b5432a'),
+    date: z.string(), // printed Jalali month + year, kept exactly as on the cover
+    editor: z.string(),
+    colorA: z.string(), // left cover band
+    colorB: z.string(), // right cover band
+    ink: z.string(), // interior background colour
+    pages: z.number(),
+    pdf: z.string(), // file name inside public/magazine/<NNN>/
+    toc: z.array(
+      z.object({
+        title: z.string(),
+        from: z.number(), // printed folio; PDF page = folio + FOLIO_OFFSET
+        to: z.number().optional(),
+        kind: z.enum([
+          'editorial', 'interview', 'members', 'news', 'game', 'book', 'puzzle',
+          'ai', 'code', 'robot', 'data', 'report', 'culture', 'tech',
+        ]),
+        who: z.string().optional(),
+      }),
+    ),
   }),
 });
 
-// Each article is single-language; `issue` is the id of its issue file.
-const articles = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: './src/content/articles' }),
-  schema: z.object({
-    title: z.string(),
-    author: z.string(),
-    authorBio: z.string().optional(),
-    lang: z.enum(['fa', 'en']),
-    issue: z.string(),
-    order: z.number().default(1),
-    summary: z.string(),
-  }),
-});
-
-export const collections = { issues, articles };
+export const collections = { issues };

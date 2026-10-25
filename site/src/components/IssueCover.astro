@@ -1,19 +1,42 @@
 ---
+import type { Issue } from '../lib/utils';
 import { faNumber } from '../lib/utils';
 
 interface Props {
-  number: number;
-  title: string;
-  color: string;
+  issue: Issue;
+  reveal?: boolean; // dissolve the cover in pixel by pixel on load
+  eager?: boolean;
+  small?: boolean; // 420px render for shelves and cards
+  class?: string;
 }
 
-const { number, title, color } = Astro.props;
+const { issue, reveal = false, eager = false, small = false, class: cls = '' } = Astro.props;
+const { number, colorA, colorB } = issue.data;
+
+// deterministic pseudo-random delays so the build is stable
+const COLS = 10;
+const ROWS = 13;
+let seed = number * 9301 + 49297;
+const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+const cells = reveal ? Array.from({ length: COLS * ROWS }, () => Math.round(rnd() * 900)) : [];
 ---
 
-<div class="cover" style={`--accent: ${color}`}>
-  <div class="cover-inner">
-    <span class="kicker">شماره‌ی</span>
-    <span class="num">{faNumber(number)}</span>
-    <span class="ttl">{title}</span>
-  </div>
+<div class={`cvr ${cls}`} style={`--a:${colorA};--b:${colorB}`}>
+  <span class="cvr-num" aria-hidden="true">{faNumber(number)}</span>
+  <img
+    src={`/magazine/${issue.id}/${small ? 'cover-sm' : 'cover'}.jpg`}
+    alt={`جلد پیکسل، شماره‌ی ${faNumber(number)}`}
+    width="700"
+    height="990"
+    loading={eager ? 'eager' : 'lazy'}
+    decoding="async"
+    onerror="this.remove()"
+  />
+  {
+    reveal && (
+      <div class="cvr-reveal" aria-hidden="true" style={`--cols:${COLS}`}>
+        {cells.map((d) => <i style={`animation-delay:${d}ms`} />)}
+      </div>
+    )
+  }
 </div>

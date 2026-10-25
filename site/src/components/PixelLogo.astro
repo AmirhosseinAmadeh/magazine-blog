@@ -1,0 +1,21 @@
+---
+import { wordmarkRects } from '../lib/pixel';
+
+interface Props {
+  animate?: boolean;
+  class?: string;
+}
+
+const { animate = false, class: cls = '' } = Astro.props;
+const rects = wordmarkRects();
+---
+
+<svg
+  class={`logo ${animate ? 'logo-anim' : ''} ${cls}`}
+  viewBox="0 0 29 7"
+  role="img"
+  aria-label="PIXEL"
+  shape-rendering="crispEdges"
+>
+  {rects.map((r, i) => <rect x={r.x} y={r.y} width="1" height="1" style={`--i:${(i * 7) % rects.length}`} />)}
+</svg>

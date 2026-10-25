@@ -1,0 +1,15 @@
+---
+import { ICONS, bitmapRects } from '../lib/pixel';
+
+interface Props {
+  name: string;
+  class?: string;
+}
+
+const { name, class: cls = '' } = Astro.props;
+const rects = bitmapRects(ICONS[name] ?? ICONS.tech);
+---
+
+<svg class={`pxi ${cls}`} viewBox="0 0 9 9" aria-hidden="true" shape-rendering="crispEdges" fill="currentColor">
+  {rects.map((r) => <rect x={r.x} y={r.y} width="1" height="1" />)}
+</svg>

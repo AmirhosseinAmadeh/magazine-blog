@@ -1,50 +1,117 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import PixelLogo from '../components/PixelLogo.astro';
+import PixelIcon from '../components/PixelIcon.astro';
 import IssueCover from '../components/IssueCover.astro';
-import ArticleList from '../components/ArticleList.astro';
-import { faDate } from '../lib/utils';
+import Toc from '../components/Toc.astro';
+import { KINDS } from '../lib/pixel';
+import { faNumber, issueLabel, pdfInfo, readUrl, sortIssues } from '../lib/utils';
 
-const issues = (await getCollection('issues')).sort((a, b) => b.data.number - a.data.number);
-const current = issues[0];
-const articles = (await getCollection('articles'))
-  .filter((a) => a.data.issue === current.id)
-  .sort((a, b) => a.data.order - b.data.order);
-const older = issues.slice(1);
+const issues = sortIssues(await getCollection('issues'));
+const latest = issues[0];
+
+const all = issues.flatMap((i) => i.data.toc);
+const totalPages = issues.reduce((s, i) => s + i.data.pages, 0);
+const kindCount = Object.entries(
+  all.filter((e) => e.kind !== 'editorial').reduce<Record<string, number>>((m, e) => ((m[e.kind] = (m[e.kind] ?? 0) + 1), m), {}),
+).sort((a, b) => b[1] - a[1]);
+const ticker = [...new Set(all.map((e) => e.title))].filter((t) => t !== 'معما' && t !== 'سخن سردبیر').slice(0, 40);
+const pdf = latest ? pdfInfo(latest) : null;
 ---
 
-<Base accent={current.data.color}>
-  <section class="hero">
-    <IssueCover number={current.data.number} title={current.data.theme} color={current.data.color} />
-    <div>
-      <div class="eyebrow">شماره‌ی جاری · {faDate(current.data.date)}</div>
-      <h1>{current.data.title}</h1>
-      <p class="muted">موضوع این شماره: {current.data.theme}</p>
-      <div class="actions">
-        <a class="btn" href={`/issues/${current.id}`}>خواندن شماره</a>
-        <a class="btn ghost" href={`/issues/${current.id}`}>دانلود PDF</a>
-      </div>
-    </div>
-  </section>
-
-  <div class="section-head"><h2>مقاله‌های این شماره</h2></div>
-  <ArticleList articles={articles} />
-
+<Base>
   {
-    older.length > 0 && (
+    !latest ? (
+      <section class="empty">
+        <PixelLogo />
+        <p>هنوز شماره‌ای منتشر نشده است.</p>
+      </section>
+    ) : (
       <>
-        <div class="section-head">
-          <h2>شماره‌های قبلی</h2>
-          <a href="/archive">همه‌ی شماره‌ها</a>
-        </div>
-        <div class="issue-grid">
-          {older.map((i) => (
-            <a href={`/issues/${i.id}`}>
-              <IssueCover number={i.data.number} title={i.data.theme} color={i.data.color} />
-              <div class="meta">{i.data.title}</div>
+        <section class="hero full-bleed">
+          <div class="hero-bands" aria-hidden="true"></div>
+          <div class="wrap hero-grid">
+            <div class="hero-panel px">
+              <PixelLogo animate class="hero-logo" />
+              <p class="hero-sub">نشریه‌ی انجمن علمی دانشکده‌ی مهندسی کامپیوتر<br />دانشگاه شهید بهشتی</p>
+              <p class="hero-issue">
+                <span class="tag">{issueLabel(latest)}</span>
+                <span class="cursor">{latest.data.date}</span>
+              </p>
+              <div class="actions">
+                <a class="btn" href={readUrl(latest)}>بخوان</a>
+                {pdf && (
+                  <a class="btn ghost" href={pdf.url} download>
+                    دانلود PDF <small>({pdf.mb} مگ)</small>
+                  </a>
+                )}
+                <a class="btn ghost" href="/archive">همه‌ی شماره‌ها</a>
+              </div>
+            </div>
+            <a class="hero-cover" href={`/issues/${latest.id}`} aria-label={`صفحه‌ی ${issueLabel(latest)}`}>
+              <IssueCover issue={latest} reveal eager />
             </a>
-          ))}
+          </div>
+        </section>
+
+        <div class="ticker full-bleed" aria-hidden="true">
+          <div class="ticker-track">
+            {[0, 1].map(() => ticker.map((t) => <span>{t}</span>))}
+          </div>
         </div>
+
+        <div class="section-head">
+          <h2>دورنما <small>{issueLabel(latest)}</small></h2>
+          <a href={`/issues/${latest.id}`}>صفحه‌ی شماره ←</a>
+        </div>
+        <Toc issue={latest} />
+
+        <div class="section-head">
+          <h2>قفسه‌ی شماره‌ها</h2>
+          <a href="/archive">آرشیو و فهرست مطالب ←</a>
+        </div>
+        <div class="shelf">
+          {
+            issues.map((i) => (
+              <a href={`/issues/${i.id}`} class="shelf-item">
+                <IssueCover issue={i} small />
+                <span class="shelf-cap">
+                  <b>{issueLabel(i)}</b>
+                  <small>{i.data.date}</small>
+                </span>
+              </a>
+            ))
+          }
+        </div>
+
+        <div class="section-head"><h2>ستون‌های ثابت</h2></div>
+        <ul class="kinds">
+          {
+            kindCount.map(([k, n]) => (
+              <li>
+                <a class="kind px" href={`/archive#kind=${k}`}>
+                  <PixelIcon name={k} />
+                  <span class="kind-name">{KINDS[k]}</span>
+                  <span class="kind-n">{faNumber(n)}</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+
+        <section class="stats">
+          <div><b>{faNumber(issues.length)}</b><span>شماره</span></div>
+          <div><b>{faNumber(totalPages)}</b><span>صفحه</span></div>
+          <div><b>{faNumber(all.length)}</b><span>مطلب</span></div>
+          <div><b>{faNumber(all.filter((e) => e.kind === 'interview').length)}</b><span>مصاحبه</span></div>
+        </section>
+
+        <section class="cta px">
+          <h2>برای پیکسل بنویس</h2>
+          <p>درباره‌ی چیزی که می‌دانی، می‌سازی یا کنجکاوش هستی. مطلبت می‌تواند در شماره‌ی بعد باشد.</p>
+          <a class="btn" href="/write">راهنمای نویسندگان</a>
+        </section>
       </>
     )
   }

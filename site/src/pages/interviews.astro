@@ -1,0 +1,49 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import PixelIcon from '../components/PixelIcon.astro';
+import { faNumber, issueLabel, pagesLabel, pdfPage, readUrl, sortIssues } from '../lib/utils';
+
+const issues = sortIssues(await getCollection('issues'));
+const items = issues.flatMap((i) => i.data.toc.filter((e) => e.kind === 'interview').map((e) => ({ i, e })));
+---
+
+<Base title="مصاحبه‌ها">
+  <h1 class="page-title">مصاحبه‌ها</h1>
+  <p class="lead">در هر شماره با یکی از اساتید یا پیشکسوتان گفت‌وگو کرده‌ایم. این‌ها همه‌ی گفت‌وگوهای تا امروزند.</p>
+
+  {
+    items.length === 0 ? (
+      <p class="muted">هنوز مصاحبه‌ای ثبت نشده است.</p>
+    ) : (
+      <ul class="iv-list">
+        {items.map(({ i, e }) => (
+          <li>
+            <a class="iv px" href={readUrl(i, e.from)} style={`--a:${i.data.colorA};--b:${i.data.colorB}`}>
+              <span class="iv-thumb">
+                <img
+                  src={`/magazine/${i.id}/thumbs/p${String(pdfPage(e.from)).padStart(3, '0')}.jpg`}
+                  alt=""
+                  loading="lazy"
+                  width="260"
+                  height="368"
+                  onerror="this.remove()"
+                />
+                <PixelIcon name="interview" />
+              </span>
+              <span class="iv-body">
+                <b>{e.who ?? 'مصاحبه با پیشکسوتان'}</b>
+                <span class="muted">
+                  {issueLabel(i)} · {i.data.date}
+                </span>
+                <span class="iv-pg">
+                  صفحه‌ی <bdi dir="ltr">{pagesLabel(e)}</bdi> ·{faNumber((e.to ?? e.from) - e.from + 1)} صفحه
+                </span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</Base>

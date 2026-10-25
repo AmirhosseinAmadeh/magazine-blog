@@ -1,0 +1,25 @@
+---
+import PixelIcon from './PixelIcon.astro';
+import type { Issue } from '../lib/utils';
+import { pagesLabel, readUrl } from '../lib/utils';
+
+interface Props {
+  issue: Issue;
+}
+
+const { issue } = Astro.props;
+---
+
+<ul class="toc">
+  {
+    issue.data.toc.map((e) => (
+      <li>
+        <a class="toc-cell px" href={readUrl(issue, e.from)}>
+          <PixelIcon name={e.kind} />
+          <span class="toc-title">{e.title}</span>
+          <span class="toc-pg">{pagesLabel(e)}</span>
+        </a>
+      </li>
+    ))
+  }
+</ul>

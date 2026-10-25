@@ -1,14 +1,33 @@
 ---
 import '../styles/global.css';
+import { getCollection } from 'astro:content';
+import PixelLogo from '../components/PixelLogo.astro';
+import { sortIssues, readUrl } from '../lib/utils';
 
 interface Props {
   title?: string;
   description?: string;
-  accent?: string;
+  /** colours of the issue this page belongs to; defaults to the latest issue */
+  theme?: { colorA: string; colorB: string; ink: string };
+  bare?: boolean; // reader: no footer
 }
 
-const { title, description = 'مجله‌ی آنلاین رایگان، شماره‌به‌شماره و با موضوع مشخص', accent } = Astro.props;
-const fullTitle = title ? `${title} | مجله` : 'مجله';
+const { title, description = 'آرشیو و خوانش آنلاین پیکسل، نشریه‌ی انجمن علمی دانشکده‌ی مهندسی کامپیوتر دانشگاه شهید بهشتی', theme, bare = false } =
+  Astro.props;
+const issues = sortIssues(await getCollection('issues'));
+const latest = issues[0];
+const t = theme ?? latest?.data;
+const style = t ? `--a:${t.colorA};--b:${t.colorB};--ink:${t.ink}` : undefined;
+const fullTitle = title ? `${title} | پیکسل` : 'پیکسل | نشریه‌ی انجمن علمی مهندسی کامپیوتر';
+const path = Astro.url.pathname;
+
+const nav = [
+  { href: '/archive', label: 'شماره‌ها' },
+  { href: '/interviews', label: 'مصاحبه‌ها' },
+  ...(latest ? [{ href: readUrl(latest).split('#')[0], label: 'خواندن آنلاین' }] : []),
+  { href: '/about', label: 'درباره' },
+  { href: '/write', label: 'برای نویسندگان' },
+];
 ---
 
 <!doctype html>
@@ -17,32 +36,38 @@ const fullTitle = title ? `${title} | مجله` : 'مجله';
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
+    <meta name="color-scheme" content="dark light" />
     <title>{fullTitle}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=VT323&family=Vazirmatn:wght@400;500;700;900&display=swap"
       rel="stylesheet"
     />
   </head>
-  <body style={accent ? `--accent: ${accent}` : undefined}>
+  <body style={style}>
+    <a class="skip" href="#main">رفتن به محتوا</a>
     <header class="site-header">
       <div class="wrap bar">
-        <a class="brand" href="/">مجله</a>
-        <nav>
-          <a href="/archive">آرشیو شماره‌ها</a>
-          <a href="/write">برای نویسندگان</a>
-          <a href="/about">درباره</a>
+        <a class="brand" href="/" aria-label="پیکسل، صفحه‌ی اصلی"><PixelLogo /></a>
+        <nav aria-label="منوی اصلی">
+          {nav.map((n) => <a href={n.href} aria-current={path.startsWith(n.href) && n.href !== '/' ? 'page' : undefined}>{n.label}</a>)}
         </nav>
       </div>
     </header>
-    <main class="wrap">
+    <main id="main" class={bare ? '' : 'wrap'}>
       <slot />
     </main>
-    <footer class="site-footer">
-      <div class="wrap">
-        <p>همه‌ی شماره‌ها رایگان و قابل دانلود است. مقاله‌ها متعلق به نویسندگان‌شان است.</p>
-      </div>
-    </footer>
+    {
+      !bare && (
+        <footer class="site-footer">
+          <div class="wrap">
+            <PixelLogo class="foot-logo" />
+            <p>نشریه‌ی انجمن علمی دانشکده‌ی مهندسی کامپیوتر · دانشگاه شهید بهشتی</p>
+            <p class="muted">همه‌ی شماره‌ها را می‌شود آنلاین خواند یا به‌صورت PDF دانلود کرد.</p>
+          </div>
+        </footer>
+      )
+    }
   </body>
 </html>

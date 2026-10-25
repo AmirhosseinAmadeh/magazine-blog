@@ -1,0 +1,174 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { FOLIO_OFFSET, issueLabel, pad2, pdfInfo, pdfPage } from '../../lib/utils';
+
+export async function getStaticPaths() {
+  const issues = await getCollection('issues');
+  return issues.map((issue) => ({ params: { id: issue.id }, props: { issue } }));
+}
+
+const { issue } = Astro.props;
+const pdf = pdfInfo(issue);
+const data = {
+  id: issue.id,
+  total: issue.data.pages,
+  toc: [{ t: 'جلد', p: 1 }, ...issue.data.toc.map((e) => ({ t: `${pad2(e.from)} · ${e.title}`, p: pdfPage(e.from) }))],
+  offset: FOLIO_OFFSET,
+};
+---
+
+<Base title={`خواندن ${issueLabel(issue)}`} theme={issue.data} bare>
+  <div class="reader" id="reader" data-mode="single">
+    <div class="rd-bar">
+      <a class="rd-btn" href={`/issues/${issue.id}`} title="صفحه‌ی شماره">☰ {issueLabel(issue)}</a>
+      <label class="rd-toc">
+        <span class="sr">فهرست</span>
+        <select id="rd-toc">
+          {data.toc.map((e) => <option value={e.p}>{e.t}</option>)}
+        </select>
+      </label>
+      <span class="rd-count" id="rd-count" aria-live="polite"></span>
+      <button class="rd-btn" id="rd-thumbs" type="button" aria-pressed="false" title="نمای بندانگشتی (T)">▦</button>
+      <button class="rd-btn" id="rd-zoom" type="button" aria-pressed="false" title="بزرگ‌نمایی (Z)">＋</button>
+      {pdf && <a class="rd-btn" href={pdf.url} download title="دانلود PDF">⬇ PDF</a>}
+    </div>
+
+    <div class="rd-stage" id="rd-stage">
+      <button class="rd-arrow rd-prev" id="rd-prev" type="button" aria-label="صفحه‌ی قبل">→</button>
+      <div class="rd-spread" id="rd-spread">
+        <img class="pg" id="pg-a" alt="" />
+        <img class="pg" id="pg-b" alt="" />
+      </div>
+      <button class="rd-arrow rd-next" id="rd-next" type="button" aria-label="صفحه‌ی بعد">←</button>
+      <noscript><p class="rd-note">برای خواندن آنلاین جاوااسکریپت لازم است؛ می‌توانید PDF را دانلود کنید.</p></noscript>
+    </div>
+
+    <div class="rd-progress" aria-hidden="true"><i id="rd-bar"></i></div>
+    <div class="rd-grid" id="rd-grid" hidden></div>
+  </div>
+  <script type="application/json" id="rd-data" set:html={JSON.stringify(data)} />
+</Base>
+
+<script>
+  const root = document.getElementById('reader')!;
+  const data = JSON.parse(document.getElementById('rd-data')!.textContent!) as {
+    id: string; total: number; toc: { t: string; p: number }[];
+  };
+  const pad = (n: number) => String(n).padStart(3, '0');
+  const src = (p: number) => `/magazine/${data.id}/pages/p${pad(p)}.jpg`;
+  const fa = (n: number) => n.toLocaleString('fa-IR');
+  const imgs = [document.getElementById('pg-a'), document.getElementById('pg-b')] as HTMLImageElement[];
+  const sel = document.getElementById('rd-toc') as HTMLSelectElement;
+  const count = document.getElementById('rd-count')!;
+  const bar = document.getElementById('rd-bar')!;
+  const grid = document.getElementById('rd-grid')!;
+  const stage = document.getElementById('rd-stage')!;
+  const thumbsBtn = document.getElementById('rd-thumbs')!;
+  const zoomBtn = document.getElementById('rd-zoom')!;
+  const wide = matchMedia('(min-width: 960px)');
+
+  // RTL book: cover alone, then (2,3) (4,5) ... with the lower page on the right.
+  const build = () => {
+    if (!wide.matches) return Array.from({ length: data.total }, (_, i) => [i + 1]);
+    const s = [[1]];
+    for (let p = 2; p <= data.total; p += 2) s.push(p + 1 <= data.total ? [p, p + 1] : [p]);
+    return s;
+  };
+  let list = build();
+  let idx = 0;
+  const clampPage = (p: number) => Math.min(data.total, Math.max(1, Math.round(p) || 1));
+  const idxOf = (p: number) => Math.max(0, list.findIndex((s) => s.includes(p)));
+
+  function load(img: HTMLImageElement, p?: number) {
+    if (!p) { img.hidden = true; img.removeAttribute('src'); return; }
+    img.hidden = false;
+    img.classList.remove('miss');
+    img.alt = `صفحه‌ی ${fa(p)}`;
+    img.onerror = () => img.classList.add('miss');
+    img.src = src(p);
+  }
+  const preload = (p?: number) => { if (p) new Image().src = src(p); };
+
+  function show(i: number, push = true) {
+    idx = Math.min(list.length - 1, Math.max(0, i));
+    const s = list[idx];
+    load(imgs[0], s[0]);
+    load(imgs[1], s[1]);
+    root.dataset.pages = String(s.length);
+    count.textContent = s.length === 2 ? `${fa(s[0])}–${fa(s[1])} / ${fa(data.total)}` : `${fa(s[0])} / ${fa(data.total)}`;
+    bar.style.width = `${(s[s.length - 1] / data.total) * 100}%`;
+    const cur = [...sel.options].reverse().find((o) => +o.value <= s[0]);
+    if (cur) sel.value = cur.value;
+    (list[idx + 1] ?? []).forEach(preload);
+    (list[idx - 1] ?? []).forEach(preload);
+    if (push) history.replaceState(null, '', `#p=${s[0]}`);
+  }
+  const go = (p: number) => show(idxOf(clampPage(p)));
+  const next = () => show(idx + 1);
+  const prev = () => show(idx - 1);
+
+  document.getElementById('rd-next')!.addEventListener('click', next);
+  document.getElementById('rd-prev')!.addEventListener('click', prev);
+  sel.addEventListener('change', () => go(+sel.value));
+
+  function toggle(btn: HTMLElement, cls: string, on?: boolean) {
+    const v = on ?? btn.getAttribute('aria-pressed') !== 'true';
+    btn.setAttribute('aria-pressed', String(v));
+    root.classList.toggle(cls, v);
+    return v;
+  }
+  function openGrid(on?: boolean) {
+    const v = toggle(thumbsBtn, 'show-grid', on);
+    grid.hidden = !v;
+    if (v && !grid.childElementCount) {
+      for (let p = 1; p <= data.total; p++) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.innerHTML = `<img loading="lazy" alt="" src="/magazine/${data.id}/thumbs/p${pad(p)}.jpg"><span>${fa(p)}</span>`;
+        b.querySelector('img')!.onerror = (e) => (e.target as HTMLElement).remove();
+        b.addEventListener('click', () => { go(p); openGrid(false); });
+        grid.append(b);
+      }
+    }
+  }
+  thumbsBtn.addEventListener('click', () => openGrid());
+  zoomBtn.addEventListener('click', () => toggle(zoomBtn, 'zoom'));
+
+  addEventListener('keydown', (e) => {
+    if ((e.target as HTMLElement).tagName === 'SELECT') return;
+    // RTL: ArrowLeft goes forward in the book
+    if (e.key === 'ArrowLeft' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); next(); }
+    else if (e.key === 'ArrowRight' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+    else if (e.key === 'Home') go(1);
+    else if (e.key === 'End') go(data.total);
+    else if (e.key === 't' || e.key === 'T') openGrid();
+    else if (e.key === 'z' || e.key === 'Z') toggle(zoomBtn, 'zoom');
+    else if (e.key === 'Escape') openGrid(false);
+  });
+
+  // swipe: in an RTL book a left-to-right drag turns to the next page
+  let x0 = 0, y0 = 0;
+  stage.addEventListener('pointerdown', (e) => { x0 = e.clientX; y0 = e.clientY; });
+  stage.addEventListener('pointerup', (e) => {
+    if (root.classList.contains('zoom') || e.pointerType === 'mouse') return;
+    const dx = e.clientX - x0, dy = e.clientY - y0;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) (dx > 0 ? next : prev)();
+  });
+
+  const fromHash = () => {
+    const m = location.hash.match(/p=(\d+)/);
+    return m ? clampPage(+m[1]) : 1;
+  };
+  const setMode = () => { root.dataset.mode = wide.matches ? 'wide' : 'single'; };
+  wide.addEventListener('change', () => {
+    const p = list[idx][0];
+    list = build();
+    setMode();
+    show(idxOf(p), false);
+  });
+  addEventListener('hashchange', () => show(idxOf(fromHash()), false));
+
+  setMode();
+  show(idxOf(fromHash()), false);
+</script>

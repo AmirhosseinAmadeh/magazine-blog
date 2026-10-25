@@ -2,25 +2,109 @@
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import IssueCover from '../components/IssueCover.astro';
-import { faDate } from '../lib/utils';
+import PixelIcon from '../components/PixelIcon.astro';
+import { KINDS } from '../lib/pixel';
+import { issueLabel, pagesLabel, readUrl, sortIssues } from '../lib/utils';
 
-const issues = (await getCollection('issues')).sort((a, b) => b.data.number - a.data.number);
+const issues = sortIssues(await getCollection('issues'));
+const present = [...new Set(issues.flatMap((i) => i.data.toc.map((e) => e.kind)))];
 ---
 
 <Base title="آرشیو شماره‌ها">
-  <h1>آرشیو شماره‌ها</h1>
-  <p class="muted">همه‌ی شماره‌ها رایگان است و PDF هر شماره را می‌توان دانلود کرد.</p>
-  <div class="issue-grid" style="margin-top: 24px">
+  <h1 class="page-title">آرشیو</h1>
+  <p class="lead">همه‌ی شماره‌های پیکسل، از جدید به قدیم.</p>
+
+  <div class="shelf">
     {
       issues.map((i) => (
-        <a href={`/issues/${i.id}`}>
-          <IssueCover number={i.data.number} title={i.data.theme} color={i.data.color} />
-          <div class="meta">
-            <strong>{i.data.title}</strong>
-            <div class="muted">{faDate(i.data.date)}</div>
-          </div>
+        <a href={`/issues/${i.id}`} class="shelf-item">
+          <IssueCover issue={i} small />
+          <span class="shelf-cap">
+            <b>{issueLabel(i)}</b>
+            <small>{i.data.date} · {i.data.pages.toLocaleString('fa-IR')} صفحه</small>
+          </span>
         </a>
       ))
     }
   </div>
+
+  <div class="section-head"><h2>فهرست همه‌ی مطالب</h2></div>
+  <div class="filters" id="filters">
+    <input id="q" type="search" placeholder="جست‌وجو در عنوان‌ها…" aria-label="جست‌وجو در عنوان مطالب" />
+    <div class="chips" role="group" aria-label="فیلتر بر اساس ستون">
+      <button type="button" class="chip" data-kind="" aria-pressed="true">همه</button>
+      {
+        present.map((k) => (
+          <button type="button" class="chip" data-kind={k} aria-pressed="false">
+            <PixelIcon name={k} /> {KINDS[k]}
+          </button>
+        ))
+      }
+    </div>
+  </div>
+
+  <div id="index">
+    {
+      issues.map((i) => (
+        <section class="idx-group">
+          <h3><a href={`/issues/${i.id}`}>{issueLabel(i)}</a> <small>{i.data.date}</small></h3>
+          <ul class="idx-list">
+            {i.data.toc.map((e) => (
+              <li data-kind={e.kind} data-text={`${e.title} ${e.who ?? ''}`.toLowerCase()}>
+                <a href={readUrl(i, e.from)}>
+                  <PixelIcon name={e.kind} />
+                  <span class="idx-title">{e.title}</span>
+                  <span class="idx-kind">{KINDS[e.kind]}</span>
+                  <span class="idx-pg">{pagesLabel(e)}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+    <p id="none" class="muted" hidden>مطلبی با این فیلتر پیدا نشد.</p>
+  </div>
 </Base>
+
+<script>
+  const q = document.getElementById('q') as HTMLInputElement;
+  const chips = [...document.querySelectorAll<HTMLButtonElement>('.chip')];
+  const groups = [...document.querySelectorAll<HTMLElement>('.idx-group')];
+  const none = document.getElementById('none')!;
+  let kind = '';
+
+  function apply() {
+    const term = q.value.trim().toLowerCase();
+    let shown = 0;
+    groups.forEach((g) => {
+      let n = 0;
+      g.querySelectorAll<HTMLElement>('li').forEach((li) => {
+        const ok = (!kind || li.dataset.kind === kind) && (!term || (li.dataset.text ?? '').includes(term));
+        li.hidden = !ok;
+        if (ok) n++;
+      });
+      g.hidden = n === 0;
+      shown += n;
+    });
+    none.hidden = shown > 0;
+    chips.forEach((c) => c.setAttribute('aria-pressed', String((c.dataset.kind ?? '') === kind)));
+  }
+
+  function fromHash() {
+    const m = location.hash.match(/kind=([a-z]+)/);
+    kind = m && chips.some((c) => c.dataset.kind === m[1]) ? m[1] : '';
+    apply();
+  }
+
+  chips.forEach((c) =>
+    c.addEventListener('click', () => {
+      kind = c.dataset.kind ?? '';
+      history.replaceState(null, '', kind ? `#kind=${kind}` : location.pathname);
+      apply();
+    }),
+  );
+  q.addEventListener('input', apply);
+  window.addEventListener('hashchange', fromHash);
+  fromHash();
+</script>

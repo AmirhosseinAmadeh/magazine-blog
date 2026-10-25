@@ -1,44 +1,79 @@
 ---
-import { getCollection, render } from 'astro:content';
+import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import IssueCover from '../../components/IssueCover.astro';
-import ArticleList from '../../components/ArticleList.astro';
-import { faDate } from '../../lib/utils';
+import Toc from '../../components/Toc.astro';
+import { FOLIO_OFFSET, faNumber, issueLabel, pad2, pdfInfo, readUrl, sortIssues } from '../../lib/utils';
 
 export async function getStaticPaths() {
-  const issues = await getCollection('issues');
-  const articles = await getCollection('articles');
-  return issues.map((issue) => ({
+  const issues = sortIssues(await getCollection('issues'));
+  return issues.map((issue, idx) => ({
     params: { id: issue.id },
-    props: {
-      issue,
-      articles: articles.filter((a) => a.data.issue === issue.id).sort((a, b) => a.data.order - b.data.order),
-    },
+    props: { issue, newer: issues[idx - 1], older: issues[idx + 1] },
   }));
 }
 
-const { issue, articles } = Astro.props;
-const { Content } = await render(issue);
-// PDF files are dropped in public/pdf/<id>.pdf by the (future) layout script.
-const pdfUrl = `/pdf/${issue.id}.pdf`;
+const { issue, newer, older } = Astro.props;
+const pdf = pdfInfo(issue);
+const interviews = issue.data.toc.filter((e) => e.kind === 'interview');
+const sheet = Array.from({ length: issue.data.pages }, (_, i) => i + 1);
+// printed folio under each thumbnail; cover and front matter have none
+const folio = (p: number) => (p === 1 ? 'جلد' : p - FOLIO_OFFSET >= 1 ? pad2(p - FOLIO_OFFSET) : '');
 ---
 
-<Base title={issue.data.title} accent={issue.data.color}>
-  <section class="hero">
-    <IssueCover number={issue.data.number} title={issue.data.theme} color={issue.data.color} />
-    <div>
-      <div class="eyebrow">{faDate(issue.data.date)}</div>
-      <h1>{issue.data.title}</h1>
-      <p class="muted">موضوع این شماره: {issue.data.theme}</p>
+<Base title={issueLabel(issue)} theme={issue.data}>
+  <section class="issue-head">
+    <div class="issue-cover"><IssueCover issue={issue} eager /></div>
+    <div class="issue-info px">
+      <span class="tag">{issueLabel(issue)}</span>
+      <h1>{issue.data.date}</h1>
+      <dl class="facts">
+        <div><dt>صفحه</dt><dd>{faNumber(issue.data.pages)}</dd></div>
+        <div><dt>مطلب</dt><dd>{faNumber(issue.data.toc.length)}</dd></div>
+        <div><dt>سردبیر</dt><dd>{issue.data.editor}</dd></div>
+        {interviews.length > 0 && <div><dt>مصاحبه با</dt><dd>{interviews.map((e) => e.who ?? 'پیشکسوتان').join('، ')}</dd></div>}
+      </dl>
       <div class="actions">
-        <a class="btn" href={pdfUrl} download>دانلود PDF</a>
+        <a class="btn" href={readUrl(issue)}>خواندن آنلاین</a>
+        {
+          pdf ? (
+            <a class="btn ghost" href={pdf.url} download>
+              دانلود PDF <small>({pdf.mb} مگ)</small>
+            </a>
+          ) : (
+            <span class="btn ghost off" aria-disabled="true">PDF در این نسخه‌ی سایت نیست</span>
+          )
+        }
       </div>
     </div>
   </section>
 
-  <div class="section-head"><h2>سرمقاله</h2></div>
-  <div class="prose" style="margin: 0"><Content /></div>
+  <div class="section-head"><h2>دورنما</h2></div>
+  <Toc issue={issue} />
 
-  <div class="section-head"><h2>فهرست مقاله‌ها</h2></div>
-  <ArticleList articles={articles} />
+  <div class="section-head"><h2>ورق بزن</h2></div>
+  <ol class="sheet">
+    {
+      sheet.map((p) => (
+        <li>
+          <a href={`/read/${issue.id}#p=${p}`} aria-label={`صفحه‌ی ${faNumber(p)}`}>
+            <img
+              src={`/magazine/${issue.id}/thumbs/p${String(p).padStart(3, '0')}.jpg`}
+              alt=""
+              loading="lazy"
+              width="260"
+              height="368"
+              onerror="this.remove()"
+            />
+            <span>{folio(p)}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ol>
+
+  <nav class="pager" aria-label="شماره‌های دیگر">
+    {older ? <a class="btn ghost" href={`/issues/${older.id}`}>→ {issueLabel(older)}</a> : <span />}
+    {newer ? <a class="btn ghost" href={`/issues/${newer.id}`}>{issueLabel(newer)} ←</a> : <span />}
+  </nav>
 </Base>
