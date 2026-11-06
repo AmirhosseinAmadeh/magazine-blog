@@ -7,3 +7,6 @@ dist/
 # magazine issues (private, not for GitHub)
 *.pdf
 site/public/magazine/
+
+# personal notes
+brainstorm.md
