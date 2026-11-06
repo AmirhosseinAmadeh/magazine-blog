@@ -1,58 +1,56 @@
-# پیکسل — آرشیو آنلاین نشریه
+# Pixel — Online Magazine Archive
 
-سایت آرشیو **پیکسل**، نشریه‌ی انجمن علمی دانشکده‌ی مهندسی کامپیوتر دانشگاه شهید بهشتی.
-در این سایت می‌توان همه‌ی شماره‌های نشریه را آنلاین ورق زد، از فهرست مطالب مستقیم به یک مطلب رفت و PDF کامل هر شماره را دانلود کرد.
+An online archive for **Pixel**, the publication of the Computer Engineering Scientific Association at Shahid Beheshti University.
+Every issue can be paged through online, opened straight at an article from its table of contents, or downloaded as a full PDF.
 
-*An online archive for Pixel, the student publication of the Computer Engineering Scientific Association at Shahid Beheshti University. Built with [Astro](https://astro.build).*
+Built with [Astro](https://astro.build).
 
-## امکانات
+## Features
 
-- قفسه‌ی همه‌ی شماره‌ها (تا امروز ۸ شماره، از مرداد ۱۴۰۳ تا شهریور ۱۴۰۵)
-- صفحه‌ی هر شماره با جلد، سردبیر و فهرست مطالب
-- خواندن آنلاین صفحه‌به‌صفحه و دانلود PDF
-- صفحه‌ی مصاحبه‌ها با اساتید
-- صفحه‌ی «برای نویسندگان» برای همکاری در شماره‌های بعدی
-- راست‌چین کامل، مناسب موبایل
+- A shelf of every issue (8 so far, from Mordad 1403 to Shahrivar 1405)
+- An issue page with the cover, editor and table of contents
+- A page-by-page online reader and PDF download
+- An interviews page collecting the faculty interviews
+- A "write for us" page for contributors to upcoming issues
+- Full right-to-left layout, mobile friendly
 
-## ساختار پروژه
+## Project structure
 
 ```
-scripts/import_issues.py   تبدیل PDF هر شماره به جلد و تصویر صفحه‌ها
-site/                      سایت Astro
-  src/content/issues/      یک فایل برای هر شماره (شماره، تاریخ، سردبیر، رنگ‌ها، فهرست مطالب)
-  src/pages/               صفحه‌های سایت (خانه، آرشیو، شماره، خواندن، مصاحبه‌ها، درباره، نوشتن)
-  public/magazine/         PDFها و تصویر صفحه‌ها (در گیت نیست)
+scripts/import_issues.py   turns each issue PDF into covers and page images
+site/                      the Astro site
+  src/content/issues/      one file per issue (number, date, editor, colours, table of contents)
+  src/pages/               site pages (home, archive, issue, reader, interviews, about, write)
+  public/magazine/         PDFs and page images (not in git)
 ```
 
-## فایل‌های نشریه در این مخزن نیستند
+## Magazine files are not in this repository
 
-PDFها و تصویر صفحه‌ها حجم زیادی دارند (حدود ۶۰۰ مگابایت) و عمداً در `.gitignore` گذاشته شده‌اند.
-برای ساختن سایت کامل، PDF هر شماره را با نام `Pixel-No<N>*.pdf` در ریشه‌ی مخزن بگذارید و اسکریپت را اجرا کنید:
+The PDFs and page images are large (about 600 MB) and are git-ignored on purpose.
+To build the full site, put each issue's PDF in the repository root as `Pixel-No<N>*.pdf` and run:
 
 ```bash
 pip install pymupdf
 python -X utf8 scripts/import_issues.py
 ```
 
-اسکریپت برای هر شماره این فایل‌ها را در `site/public/magazine/<NNN>/` می‌سازد: کپی PDF، جلد بزرگ و کوچک، تصویر همه‌ی صفحه‌ها و تصویر بندانگشتی. اطلاعات خروجی‌اش (تعداد صفحه و رنگ‌های جلد) برای پر کردن فایل‌های `src/content/issues/` استفاده می‌شود.
+For each issue the script writes into `site/public/magazine/<NNN>/`: a copy of the PDF, large and small covers, every page as an image, and thumbnails. Its output (page count and cover colours) is used to fill in `src/content/issues/`.
 
-## اجرا
+## Running
 
 ```bash
 cd site
 npm install
-npm run dev      # سرور توسعه
-npm run build    # خروجی استاتیک در site/dist
+npm run dev      # development server
+npm run build    # static output in site/dist
 ```
 
-## حق نشر و اعتبار
+## Copyright
 
-- **محتوای نشریه** (متن‌ها، تصویرها، جلدها و فایل‌های PDF) متعلق به نشریه‌ی پیکسل و نویسندگان هر مطلب است. مالکیت هر مطلب با نویسنده‌ی آن است و بازنشر آن بدون اجازه‌ی نشریه مجاز نیست.
-- سردبیران: آراس ولی‌زاده (شماره‌های ۱ تا ۴) و سارا شیری (شماره‌های ۵ تا ۸).
-- کد این سایت را [امیرحسین آماده](https://github.com/AmirhosseinAmadeh) ساخته است. او از نویسندگان نشریه هم هست.
+The magazine content (text, images, covers and PDF files) belongs to Pixel and the authors of each article.
 
-## راه‌های ارتباطی نشریه
+## Contact the publication
 
-- 📣 کانال تلگرام: [t.me/pub_sbu](https://t.me/pub_sbu)
-- ✉️ تلگرام: [t.me/CSE_Publication](https://t.me/CSE_Publication)
-- 🌐 لینکدین: [linkedin.com/company/sbu-publication](https://www.linkedin.com/company/sbu-publication)
+- 📣 Telegram channel: [t.me/pub_sbu](https://t.me/pub_sbu)
+- ✉️ Telegram: [t.me/CSE_Publication](https://t.me/CSE_Publication)
+- 🌐 LinkedIn: [linkedin.com/company/sbu-publication](https://www.linkedin.com/company/sbu-publication)
