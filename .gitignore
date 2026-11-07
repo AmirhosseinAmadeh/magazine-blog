@@ -4,9 +4,8 @@ dist/
 .env*
 .DS_Store
 
-# magazine issues (private, not for GitHub)
+# magazine PDFs: too large for the repo, attached to the "issues" GitHub release instead
 *.pdf
-site/public/magazine/
 
 # personal notes
 brainstorm.md

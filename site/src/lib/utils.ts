@@ -1,6 +1,7 @@
 import type { CollectionEntry } from 'astro:content';
-import { statSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+
+// Site-internal path -> URL under the deploy base (the site lives at /magazine-blog/ on GitHub Pages).
+export const url = (p: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}${p}`;
 
 export type Issue = CollectionEntry<'issues'>;
 export type TocEntry = Issue['data']['toc'][number];
@@ -14,19 +15,14 @@ export const pdfPage = (folio: number) => folio + FOLIO_OFFSET;
 
 export const issueLabel = (i: Issue) => `شماره‌ی ${faNumber(i.data.number)}`;
 export const readUrl = (i: Issue, folio?: number) =>
-  `/read/${i.id}${folio === undefined ? '' : `#p=${pdfPage(folio)}`}`;
+  url(`/read/${i.id}${folio === undefined ? '' : `#p=${pdfPage(folio)}`}`);
 export const pagesLabel = (e: TocEntry) =>
   e.to ? `${pad2(e.from)}–${pad2(e.to)}` : pad2(e.from);
 
 export const sortIssues = (list: Issue[]) => [...list].sort((a, b) => b.data.number - a.data.number);
 
-// PDFs are private and may be absent (fresh clone): return null instead of failing the build.
+// The PDFs are too large for GitHub Pages, so they are attached to the "issues" release.
+const PDF_BASE = 'https://github.com/AmirhosseinAmadeh/magazine-blog/releases/download/issues';
 export function pdfInfo(i: Issue) {
-  try {
-    const rel = `../../public/magazine/${i.id}/${i.data.pdf}`;
-    const bytes = statSync(fileURLToPath(new URL(rel, import.meta.url))).size;
-    return { url: `/magazine/${i.id}/${i.data.pdf}`, mb: faNumber(Math.round(bytes / 1048576)) };
-  } catch {
-    return null;
-  }
+  return { url: `${PDF_BASE}/${i.data.pdf}`, mb: faNumber(Math.round(i.data.pdfBytes / 1048576)) };
 }

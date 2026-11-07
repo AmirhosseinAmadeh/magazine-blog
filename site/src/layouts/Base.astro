@@ -2,7 +2,7 @@
 import '../styles/global.css';
 import { getCollection } from 'astro:content';
 import PixelLogo from '../components/PixelLogo.astro';
-import { sortIssues, readUrl } from '../lib/utils';
+import { sortIssues, readUrl, url } from '../lib/utils';
 
 interface Props {
   title?: string;
@@ -22,11 +22,11 @@ const fullTitle = title ? `${title} | پیکسل` : 'پیکسل | نشریه‌�
 const path = Astro.url.pathname;
 
 const nav = [
-  { href: '/archive', label: 'شماره‌ها' },
-  { href: '/interviews', label: 'مصاحبه‌ها' },
+  { href: url('/archive'), label: 'شماره‌ها' },
+  { href: url('/interviews'), label: 'مصاحبه‌ها' },
   ...(latest ? [{ href: readUrl(latest).split('#')[0], label: 'خواندن آنلاین' }] : []),
-  { href: '/about', label: 'درباره' },
-  { href: '/write', label: 'برای نویسندگان' },
+  { href: url('/about'), label: 'درباره' },
+  { href: url('/write'), label: 'برای نویسندگان' },
 ];
 ---
 
@@ -49,7 +49,7 @@ const nav = [
     <a class="skip" href="#main">رفتن به محتوا</a>
     <header class="site-header">
       <div class="wrap bar">
-        <a class="brand" href="/" aria-label="پیکسل، صفحه‌ی اصلی"><PixelLogo /></a>
+        <a class="brand" href={url('/')} aria-label="پیکسل، صفحه‌ی اصلی"><PixelLogo /></a>
         <nav aria-label="منوی اصلی">
           {nav.map((n) => <a href={n.href} aria-current={path.startsWith(n.href) && n.href !== '/' ? 'page' : undefined}>{n.label}</a>)}
         </nav>

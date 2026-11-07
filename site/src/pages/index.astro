@@ -6,7 +6,7 @@ import PixelIcon from '../components/PixelIcon.astro';
 import IssueCover from '../components/IssueCover.astro';
 import Toc from '../components/Toc.astro';
 import { KINDS } from '../lib/pixel';
-import { faNumber, issueLabel, pdfInfo, readUrl, sortIssues } from '../lib/utils';
+import { faNumber, issueLabel, pdfInfo, readUrl, sortIssues, url } from '../lib/utils';
 
 const issues = sortIssues(await getCollection('issues'));
 const latest = issues[0];
@@ -46,10 +46,10 @@ const pdf = latest ? pdfInfo(latest) : null;
                     دانلود PDF <small>({pdf.mb} مگ)</small>
                   </a>
                 )}
-                <a class="btn ghost" href="/archive">همه‌ی شماره‌ها</a>
+                <a class="btn ghost" href={url('/archive')}>همه‌ی شماره‌ها</a>
               </div>
             </div>
-            <a class="hero-cover" href={`/issues/${latest.id}`} aria-label={`صفحه‌ی ${issueLabel(latest)}`}>
+            <a class="hero-cover" href={url(`/issues/${latest.id}`)} aria-label={`صفحه‌ی ${issueLabel(latest)}`}>
               <IssueCover issue={latest} reveal eager />
             </a>
           </div>
@@ -63,18 +63,18 @@ const pdf = latest ? pdfInfo(latest) : null;
 
         <div class="section-head" data-px>
           <h2>دورنما <small>{issueLabel(latest)}</small></h2>
-          <a href={`/issues/${latest.id}`}>صفحه‌ی شماره ←</a>
+          <a href={url(`/issues/${latest.id}`)}>صفحه‌ی شماره ←</a>
         </div>
         <Toc issue={latest} />
 
         <div class="section-head" data-px>
           <h2>قفسه‌ی شماره‌ها</h2>
-          <a href="/archive">آرشیو و فهرست مطالب ←</a>
+          <a href={url('/archive')}>آرشیو و فهرست مطالب ←</a>
         </div>
         <div class="shelf">
           {
             issues.map((i) => (
-              <a href={`/issues/${i.id}`} class="shelf-item" data-px>
+              <a href={url(`/issues/${i.id}`)} class="shelf-item" data-px>
                 <IssueCover issue={i} small />
                 <span class="shelf-cap">
                   <b>{issueLabel(i)}</b>
@@ -90,7 +90,7 @@ const pdf = latest ? pdfInfo(latest) : null;
           {
             kindCount.map(([k, n]) => (
               <li data-px>
-                <a class="kind px" href={`/archive#kind=${k}`}>
+                <a class="kind px" href={url(`/archive#kind=${k}`)}>
                   <PixelIcon name={k} />
                   <span class="kind-name">{KINDS[k]}</span>
                   <span class="kind-n" data-count={n}>{faNumber(n)}</span>
@@ -119,7 +119,7 @@ const pdf = latest ? pdfInfo(latest) : null;
         <section class="cta px" data-px>
           <h2>برای پیکسل بنویس</h2>
           <p>درباره‌ی چیزی که می‌دانی، می‌سازی یا کنجکاوش هستی. مطلبت می‌تواند در شماره‌ی بعد باشد.</p>
-          <a class="btn" href="/write">راهنمای نویسندگان</a>
+          <a class="btn" href={url('/write')}>راهنمای نویسندگان</a>
         </section>
       </>
     )

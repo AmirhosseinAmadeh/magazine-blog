@@ -3,7 +3,7 @@ import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import IssueCover from '../../components/IssueCover.astro';
 import Toc from '../../components/Toc.astro';
-import { FOLIO_OFFSET, faNumber, issueLabel, pad2, pdfInfo, readUrl, sortIssues } from '../../lib/utils';
+import { FOLIO_OFFSET, faNumber, issueLabel, pad2, pdfInfo, readUrl, sortIssues, url } from '../../lib/utils';
 
 export async function getStaticPaths() {
   const issues = sortIssues(await getCollection('issues'));
@@ -56,9 +56,9 @@ const folio = (p: number) => (p === 1 ? 'جلد' : p - FOLIO_OFFSET >= 1 ? pad2(
     {
       sheet.map((p) => (
         <li>
-          <a href={`/read/${issue.id}#p=${p}`} aria-label={`صفحه‌ی ${faNumber(p)}`}>
+          <a href={url(`/read/${issue.id}#p=${p}`)} aria-label={`صفحه‌ی ${faNumber(p)}`}>
             <img
-              src={`/magazine/${issue.id}/thumbs/p${String(p).padStart(3, '0')}.jpg`}
+              src={url(`/magazine/${issue.id}/thumbs/p${String(p).padStart(3, '0')}.jpg`)}
               alt=""
               loading="lazy"
               width="260"
@@ -73,7 +73,7 @@ const folio = (p: number) => (p === 1 ? 'جلد' : p - FOLIO_OFFSET >= 1 ? pad2(
   </ol>
 
   <nav class="pager" aria-label="شماره‌های دیگر">
-    {older ? <a class="btn ghost" href={`/issues/${older.id}`}>→ {issueLabel(older)}</a> : <span />}
-    {newer ? <a class="btn ghost" href={`/issues/${newer.id}`}>{issueLabel(newer)} ←</a> : <span />}
+    {older ? <a class="btn ghost" href={url(`/issues/${older.id}`)}>→ {issueLabel(older)}</a> : <span />}
+    {newer ? <a class="btn ghost" href={url(`/issues/${newer.id}`)}>{issueLabel(newer)} ←</a> : <span />}
   </nav>
 </Base>

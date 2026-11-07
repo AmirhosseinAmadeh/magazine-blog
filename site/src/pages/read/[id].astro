@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
-import { FOLIO_OFFSET, issueLabel, pad2, pdfInfo, pdfPage } from '../../lib/utils';
+import { FOLIO_OFFSET, issueLabel, pad2, pdfInfo, pdfPage, url } from '../../lib/utils';
 
 export async function getStaticPaths() {
   const issues = await getCollection('issues');
@@ -21,7 +21,7 @@ const data = {
 <Base title={`خواندن ${issueLabel(issue)}`} theme={issue.data} bare>
   <div class="reader" id="reader" data-mode="single">
     <div class="rd-bar">
-      <a class="rd-btn" href={`/issues/${issue.id}`} title="صفحه‌ی شماره">☰ {issueLabel(issue)}</a>
+      <a class="rd-btn" href={url(`/issues/${issue.id}`)} title="صفحه‌ی شماره">☰ {issueLabel(issue)}</a>
       <label class="rd-toc">
         <span class="sr">فهرست</span>
         <select id="rd-toc">
@@ -55,8 +55,9 @@ const data = {
   const data = JSON.parse(document.getElementById('rd-data')!.textContent!) as {
     id: string; total: number; toc: { t: string; p: number }[];
   };
+  const B = import.meta.env.BASE_URL.replace(/\/?$/, '/');
   const pad = (n: number) => String(n).padStart(3, '0');
-  const src = (p: number) => `/magazine/${data.id}/pages/p${pad(p)}.jpg`;
+  const src = (p: number) => `${B}magazine/${data.id}/pages/p${pad(p)}.jpg`;
   const fa = (n: number) => n.toLocaleString('fa-IR');
   const imgs = [document.getElementById('pg-a'), document.getElementById('pg-b')] as HTMLImageElement[];
   const sel = document.getElementById('rd-toc') as HTMLSelectElement;
@@ -125,7 +126,7 @@ const data = {
       for (let p = 1; p <= data.total; p++) {
         const b = document.createElement('button');
         b.type = 'button';
-        b.innerHTML = `<img loading="lazy" alt="" src="/magazine/${data.id}/thumbs/p${pad(p)}.jpg"><span>${fa(p)}</span>`;
+        b.innerHTML = `<img loading="lazy" alt="" src="${B}magazine/${data.id}/thumbs/p${pad(p)}.jpg"><span>${fa(p)}</span>`;
         b.querySelector('img')!.onerror = (e) => (e.target as HTMLElement).remove();
         b.addEventListener('click', () => { go(p); openGrid(false); });
         grid.append(b);

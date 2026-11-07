@@ -2,7 +2,7 @@
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import PixelIcon from '../components/PixelIcon.astro';
-import { faNumber, issueLabel, pagesLabel, pdfPage, readUrl, sortIssues } from '../lib/utils';
+import { faNumber, issueLabel, pagesLabel, pdfPage, readUrl, sortIssues, url } from '../lib/utils';
 
 const issues = sortIssues(await getCollection('issues'));
 const items = issues.flatMap((i) => i.data.toc.filter((e) => e.kind === 'interview').map((e) => ({ i, e })));
@@ -22,7 +22,7 @@ const items = issues.flatMap((i) => i.data.toc.filter((e) => e.kind === 'intervi
             <a class="iv px" href={readUrl(i, e.from)} style={`--a:${i.data.colorA};--b:${i.data.colorB}`}>
               <span class="iv-thumb">
                 <img
-                  src={`/magazine/${i.id}/thumbs/p${String(pdfPage(e.from)).padStart(3, '0')}.jpg`}
+                  src={url(`/magazine/${i.id}/thumbs/p${String(pdfPage(e.from)).padStart(3, '0')}.jpg`)}
                   alt=""
                   loading="lazy"
                   width="260"

@@ -4,7 +4,7 @@ import Base from '../layouts/Base.astro';
 import IssueCover from '../components/IssueCover.astro';
 import PixelIcon from '../components/PixelIcon.astro';
 import { KINDS } from '../lib/pixel';
-import { issueLabel, pagesLabel, readUrl, sortIssues } from '../lib/utils';
+import { issueLabel, pagesLabel, readUrl, sortIssues, url } from '../lib/utils';
 
 const issues = sortIssues(await getCollection('issues'));
 const present = [...new Set(issues.flatMap((i) => i.data.toc.map((e) => e.kind)))];
@@ -17,7 +17,7 @@ const present = [...new Set(issues.flatMap((i) => i.data.toc.map((e) => e.kind))
   <div class="shelf">
     {
       issues.map((i) => (
-        <a href={`/issues/${i.id}`} class="shelf-item">
+        <a href={url(`/issues/${i.id}`)} class="shelf-item">
           <IssueCover issue={i} small />
           <span class="shelf-cap">
             <b>{issueLabel(i)}</b>
@@ -47,7 +47,7 @@ const present = [...new Set(issues.flatMap((i) => i.data.toc.map((e) => e.kind))
     {
       issues.map((i) => (
         <section class="idx-group">
-          <h3><a href={`/issues/${i.id}`}>{issueLabel(i)}</a> <small>{i.data.date}</small></h3>
+          <h3><a href={url(`/issues/${i.id}`)}>{issueLabel(i)}</a> <small>{i.data.date}</small></h3>
           <ul class="idx-list">
             {i.data.toc.map((e) => (
               <li data-kind={e.kind} data-text={`${e.title} ${e.who ?? ''}`.toLowerCase()}>

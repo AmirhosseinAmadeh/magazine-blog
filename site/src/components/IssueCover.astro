@@ -1,6 +1,6 @@
 ---
 import type { Issue } from '../lib/utils';
-import { faNumber } from '../lib/utils';
+import { faNumber, url } from '../lib/utils';
 
 interface Props {
   issue: Issue;
@@ -24,7 +24,7 @@ const cells = reveal ? Array.from({ length: COLS * ROWS }, () => Math.round(rnd(
 <div class={`cvr ${cls}`} style={`--a:${colorA};--b:${colorB}`}>
   <span class="cvr-num" aria-hidden="true">{faNumber(number)}</span>
   <img
-    src={`/magazine/${issue.id}/${small ? 'cover-sm' : 'cover'}.jpg`}
+    src={url(`/magazine/${issue.id}/${small ? 'cover-sm' : 'cover'}.jpg`)}
     alt={`جلد پیکسل، شماره‌ی ${faNumber(number)}`}
     width="700"
     height="990"
